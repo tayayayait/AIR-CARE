@@ -16,6 +16,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.TileOverlayOptions
 import com.google.android.gms.maps.model.UrlTileProvider
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -99,8 +100,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
-        val seoul = LatLng(37.5665, 126.9780)
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 11f))
+        val southWest = LatLng(33.0, 124.0)
+        val northEast = LatLng(38.0, 132.0)
+        val southKoreaBounds = LatLngBounds(southWest, northEast)
+        val padding = 100
+        map.moveCamera(CameraUpdateFactory.newLatLngBounds(southKoreaBounds, padding))
+        map.setLatLngBoundsForCameraTarget(southKoreaBounds)
         map.uiSettings.isMyLocationButtonEnabled = true
         map.uiSettings.isZoomControlsEnabled = true
 
