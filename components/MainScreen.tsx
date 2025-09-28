@@ -1,13 +1,15 @@
 import React, { useMemo } from 'react';
-import type { SignalData } from '../types';
+import type { SignalData, Coordinates } from '../types';
 import SignalIcon from './SignalIcon';
 import Loader from './Loader';
 import ErrorDisplay from './ErrorDisplay';
 import Header from './Header';
 import { MaskIcon, VentilateIcon, HumidifyIcon } from './Icons';
+import MapView from './MapView';
 
 interface MainScreenProps {
   locationName: string;
+  coordinates: Coordinates | null;
   signalData: SignalData | null;
   isLoading: boolean;
   error: string | null;
@@ -17,6 +19,7 @@ interface MainScreenProps {
 
 const MainScreen: React.FC<MainScreenProps> = ({
   locationName,
+  coordinates,
   signalData,
   isLoading,
   error,
@@ -84,8 +87,16 @@ const MainScreen: React.FC<MainScreenProps> = ({
   return (
     <div className="min-h-screen w-full flex flex-col items-center p-4 sm:p-6 bg-light-bg">
       <Header locationName={locationName} onRefresh={onRefresh} />
-      <main className="flex-grow flex flex-col items-center justify-center w-full">
-        {renderContent()}
+      <main className="flex-grow flex flex-col items-center w-full gap-6 py-6">
+        {coordinates && (
+          <div className="w-full max-w-2xl">
+            <h2 className="text-lg font-semibold text-dark-text mb-3">현재 위치</h2>
+            <MapView coordinates={coordinates} locationName={locationName} />
+          </div>
+        )}
+        <div className="flex flex-col items-center justify-center w-full">
+          {renderContent()}
+        </div>
       </main>
       <footer className="w-full text-center p-4 text-medium-text">
         {lastUpdated && !error && `업데이트: ${timeAgo}`}

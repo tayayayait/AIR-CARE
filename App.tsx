@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Onboarding from './components/Onboarding';
 import MainScreen from './components/MainScreen';
 import { getAirQualityData } from './services/geminiService';
-import type { RawAirData, SignalData } from './types';
+import type { RawAirData, SignalData, LocationSelection } from './types';
 
 const App: React.FC = () => {
-  const [location, setLocation] = useState<string | null>(null);
+  const [locationSelection, setLocationSelection] = useState<LocationSelection | null>(null);
+  const [lastQuery, setLastQuery] = useState<string | null>(null);
   const [rawAirData, setRawAirData] = useState<RawAirData | null>(null);
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -36,29 +37,51 @@ const App: React.FC = () => {
     }
   }, [processSignalLogic]);
 
+  const formatLocationQuery = useCallback((selection: LocationSelection): string | null => {
+    const parts: string[] = [];
+    if (selection.city) {
+      parts.push(selection.city);
+    }
+    if (selection.coordinates) {
+      const { latitude, longitude } = selection.coordinates;
+      parts.push(`위도 ${latitude.toFixed(4)}, 경도 ${longitude.toFixed(4)}`);
+    }
+    return parts.length ? parts.join(' | ') : null;
+  }, []);
+
   useEffect(() => {
-    if (location) {
-      fetchData(location);
+    if (locationSelection) {
+      const query = formatLocationQuery(locationSelection);
+      if (query) {
+        setLastQuery(query);
+        fetchData(query);
+      } else {
+        setError('위치를 확인할 수 없습니다. 다시 시도해주세요.');
+      }
     }
-  }, [location, fetchData]);
+  }, [locationSelection, formatLocationQuery, fetchData]);
 
-  const handleLocationSubmit = (newLocation: string) => {
-    setLocation(newLocation);
+  const handleLocationSubmit = (newLocation: LocationSelection) => {
+    setRawAirData(null);
+    setSignalData(null);
+    setLastUpdated(null);
+    setLocationSelection(newLocation);
   };
-  
+
   const handleRefresh = () => {
-    if(location) {
-        fetchData(location);
+    if (lastQuery) {
+      fetchData(lastQuery);
     }
   };
 
-  if (!location) {
+  if (!locationSelection) {
     return <Onboarding onSubmit={handleLocationSubmit} />;
   }
 
   return (
     <MainScreen
-      locationName={rawAirData?.locationName || location}
+      locationName={rawAirData?.locationName || locationSelection.city || '현재 위치'}
+      coordinates={locationSelection.coordinates || null}
       signalData={signalData}
       isLoading={isLoading}
       error={error}
