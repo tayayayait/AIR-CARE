@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
+import com.aircare.BuildConfig
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
@@ -14,9 +15,14 @@ import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 object PlacesSearch {
     fun initialize(application: Application) {
         if (!Places.isInitialized()) {
+            val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
+            if (apiKey.isBlank()) {
+                return
+            }
+
             Places.initializeWithNewPlacesApiEnabled(
                 application.applicationContext,
-                "YOUR_GOOGLE_MAPS_API_KEY"
+                apiKey
             )
         }
     }

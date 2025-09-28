@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.aircare.BuildConfig
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -124,10 +125,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
         )
 
         lifecycleScope.launch(Dispatchers.IO) {
+            val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
+            if (apiKey.isBlank()) {
+                withContext(Dispatchers.Main) {
+                    if (!isFinishing && !isDestroyed) {
+                        addressTextView.text = getString(R.string.address_placeholder)
+                    }
+                }
+                return@launch
+            }
+
             val address = Geo.reverseGeocode(
                 target.latitude,
                 target.longitude,
-                "YOUR_GOOGLE_MAPS_API_KEY"
+                apiKey
             )
             withContext(Dispatchers.Main) {
                 if (!isFinishing && !isDestroyed) {
@@ -138,6 +149,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     }
 
     private fun addHeatmapOverlay(map: GoogleMap) {
+        val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
+        if (apiKey.isBlank()) {
+            return
+        }
+
         val tileProvider = object : UrlTileProvider(256, 256) {
             override fun getTileUrl(x: Int, y: Int, zoom: Int): URL? {
                 val url = String.format(
@@ -146,7 +162,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
                     zoom,
                     x,
                     y,
-                    "YOUR_GOOGLE_MAPS_API_KEY"
+                    apiKey
                 )
                 return try {
                     URL(url)
