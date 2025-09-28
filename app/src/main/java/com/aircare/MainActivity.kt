@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.aircare.BuildConfig
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -38,6 +40,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     private lateinit var coordinatesTextView: TextView
     private lateinit var updatedAtTextView: TextView
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -63,6 +66,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
         val bottomSheetCard: MaterialCardView = findViewById(R.id.bottom_sheet_container)
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetCard)
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         val seoul = LatLng(37.5665, 126.9780)
         coordinatesTextView.text = String.format(
@@ -107,6 +112,35 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
         addHeatmapOverlay(map)
 
         map.setOnCameraIdleListener(this)
+        map.setOnMyLocationButtonClickListener {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                showPermissionDeniedMessage()
+                return@setOnMyLocationButtonClickListener true
+            }
+
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location ->
+                    if (location != null) {
+                        val currentLatLng = LatLng(location.latitude, location.longitude)
+                        map.animateCamera(
+                            CameraUpdateFactory.newLatLngZoom(
+                                currentLatLng,
+                                15f
+                            )
+                        )
+                    } else {
+                        showLocationUnavailableMessage()
+                    }
+                }
+                .addOnFailureListener {
+                    showLocationUnavailableMessage()
+                }
+            true
+        }
         enableMyLocation()
     }
 
@@ -203,6 +237,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
     private fun showPermissionDeniedMessage() {
         val rootView = findViewById<MaterialCardView>(R.id.bottom_sheet_container)
-        Snackbar.make(rootView, R.string.address_placeholder, Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(rootView, R.string.location_permission_denied_message, Snackbar.LENGTH_SHORT)
+            .show()
+    }
+
+    private fun showLocationUnavailableMessage() {
+        val rootView = findViewById<MaterialCardView>(R.id.bottom_sheet_container)
+        Snackbar.make(rootView, R.string.location_unavailable_message, Snackbar.LENGTH_SHORT).show()
     }
 }
