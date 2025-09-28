@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AIR-CARE</string>
+    <string name="search_places">장소 검색</string>
+    <string name="address_placeholder">주소를 불러오는 중...</string>
+    <string name="coordinates_placeholder">위도: %.5f, 경도: %.5f</string>
+    <string name="updated_placeholder">업데이트: %s</string>
+</resources>
