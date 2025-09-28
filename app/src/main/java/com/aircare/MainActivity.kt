@@ -9,17 +9,22 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.aircare.databinding.ActivityMainBinding
 import com.aircare.BuildConfig
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.TileOverlayOptions
 import com.google.android.gms.maps.model.UrlTileProvider
-import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +43,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     private lateinit var addressTextView: TextView
     private lateinit var coordinatesTextView: TextView
     private lateinit var updatedAtTextView: TextView
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
+    private lateinit var bottomSheetBehavior: com.google.android.material.bottomsheet.BottomSheetBehavior<MaterialCardView>
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -63,8 +69,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
         updatedAtTextView = binding.textUpdatedAt
 
         val bottomSheetCard: MaterialCardView = binding.bottomSheetContainer
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetCard)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        bottomSheetBehavior = com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheetCard)
+        bottomSheetBehavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         val seoul = LatLng(37.5665, 126.9780)
         coordinatesTextView.text = String.format(
@@ -88,9 +96,29 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
                 }
             }
 
-        binding.buttonSearch.setOnClickListener {
-            PlacesSearch.launchAutocomplete(this, autocompleteLauncher)
+        // Toolbar 설정 및 검색 메뉴 클릭 처리
+        val toolbar: MaterialToolbar = findViewById(R.id.top_app_bar)
+        toolbar.setOnMenuItemClickListener { menuItem ->
+            if (menuItem.itemId == R.id.action_search) {
+                PlacesSearch.launchAutocomplete(this, autocompleteLauncher)
+                true
+            } else {
+                false
+            }
         }
+
+        // 상태바 인셋 적용
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.setPadding(
+                view.paddingLeft,
+                insets.top,
+                view.paddingRight,
+                view.paddingBottom
+            )
+            windowInsets
+        }
+        ViewCompat.requestApplyInsets(toolbar)
 
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
@@ -101,14 +129,47 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
-        val seoul = LatLng(37.5665, 126.9780)
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 11f))
+        val southWest = LatLng(33.0, 124.0)
+        val northEast = LatLng(38.0, 132.0)
+        val southKoreaBounds = LatLngBounds(southWest, northEast)
+        val padding = 100
+        map.moveCamera(CameraUpdateFactory.newLatLngBounds(southKoreaBounds, padding))
+        map.setLatLngBoundsForCameraTarget(southKoreaBounds)
         map.uiSettings.isMyLocationButtonEnabled = true
         map.uiSettings.isZoomControlsEnabled = true
 
         addHeatmapOverlay(map)
 
         map.setOnCameraIdleListener(this)
+        map.setOnMyLocationButtonClickListener {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                showPermissionDeniedMessage()
+                return@setOnMyLocationButtonClickListener true
+            }
+
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location ->
+                    if (location != null) {
+                        val currentLatLng = LatLng(location.latitude, location.longitude)
+                        map.animateCamera(
+                            CameraUpdateFactory.newLatLngZoom(
+                                currentLatLng,
+                                15f
+                            )
+                        )
+                    } else {
+                        showLocationUnavailableMessage()
+                    }
+                }
+                .addOnFailureListener {
+                    showLocationUnavailableMessage()
+                }
+            true
+        }
         enableMyLocation()
     }
 
@@ -152,23 +213,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
     private fun addHeatmapOverlay(map: GoogleMap) {
         val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
-        if (apiKey.isBlank()) {
-            return
-        }
+        if (apiKey.isBlank()) return
 
         val tileProvider = object : UrlTileProvider(256, 256) {
             override fun getTileUrl(x: Int, y: Int, zoom: Int): URL? {
                 val url = String.format(
                     Locale.US,
                     "https://tile.googleapis.com/v1/airquality/heatmap/%d/%d/%d.png?key=%s",
-                    zoom,
-                    x,
-                    y,
-                    apiKey
+                    zoom, x, y, apiKey
                 )
                 return try {
                     URL(url)
-                } catch (error: MalformedURLException) {
+                } catch (_: MalformedURLException) {
                     null
                 }
             }
@@ -205,6 +261,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
     private fun showPermissionDeniedMessage() {
         val rootView = binding.bottomSheetContainer
-        Snackbar.make(rootView, R.string.address_placeholder, Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(rootView, R.string.location_permission_denied_message, Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun showLocationUnavailableMessage() {
+        val rootView = binding.bottomSheetContainer
+        Snackbar.make(rootView, R.string.location_unavailable_message, Snackbar.LENGTH_SHORT).show()
     }
 }
