@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.aircare.databinding.ActivityMainBinding
 import com.aircare.BuildConfig
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -19,7 +20,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.TileOverlayOptions
 import com.google.android.gms.maps.model.UrlTileProvider
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +33,7 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCameraIdleListener {
 
+    private lateinit var binding: ActivityMainBinding
     private var googleMap: GoogleMap? = null
     private lateinit var addressTextView: TextView
     private lateinit var coordinatesTextView: TextView
@@ -52,15 +53,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         PlacesSearch.initialize(application)
 
-        addressTextView = findViewById(R.id.text_address)
-        coordinatesTextView = findViewById(R.id.text_coordinates)
-        updatedAtTextView = findViewById(R.id.text_updated_at)
+        addressTextView = binding.textAddress
+        coordinatesTextView = binding.textCoordinates
+        updatedAtTextView = binding.textUpdatedAt
 
-        val bottomSheetCard: MaterialCardView = findViewById(R.id.bottom_sheet_container)
+        val bottomSheetCard: MaterialCardView = binding.bottomSheetContainer
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetCard)
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
@@ -86,7 +88,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
                 }
             }
 
-        findViewById<MaterialButton>(R.id.button_search).setOnClickListener {
+        binding.buttonSearch.setOnClickListener {
             PlacesSearch.launchAutocomplete(this, autocompleteLauncher)
         }
 
@@ -202,7 +204,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     }
 
     private fun showPermissionDeniedMessage() {
-        val rootView = findViewById<MaterialCardView>(R.id.bottom_sheet_container)
+        val rootView = binding.bottomSheetContainer
         Snackbar.make(rootView, R.string.address_placeholder, Snackbar.LENGTH_SHORT).show()
     }
 }
