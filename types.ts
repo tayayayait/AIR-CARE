@@ -1,4 +1,14 @@
 
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export interface LocationSelection {
+  city?: string | null;
+  coordinates?: Coordinates | null;
+}
+
 export interface RawAirData {
   locationName: string;
   pm10: number;
