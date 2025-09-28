@@ -57,7 +57,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/address_placeholder"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:textColor="@android:color/black" />
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/text_coordinates"
@@ -65,7 +65,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text=""
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:id="@+id/text_updated_at"
@@ -73,7 +74,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text=""
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                android:textColor="?attr/colorOnSurface" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
