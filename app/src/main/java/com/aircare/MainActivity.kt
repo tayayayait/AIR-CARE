@@ -203,6 +203,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
     private fun showPermissionDeniedMessage() {
         val rootView = findViewById<MaterialCardView>(R.id.bottom_sheet_container)
-        Snackbar.make(rootView, R.string.address_placeholder, Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(rootView, R.string.permission_denied_message, Snackbar.LENGTH_SHORT).show()
     }
 }
