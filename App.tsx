@@ -80,7 +80,11 @@ const App: React.FC = () => {
 
   return (
     <MainScreen
-      locationName={rawAirData?.locationName || locationSelection.city || '현재 위치'}
+      locationName={
+        locationSelection.city
+          ? rawAirData?.locationName || locationSelection.city
+          : '현재 위치'
+      }
       coordinates={locationSelection.coordinates || null}
       signalData={signalData}
       isLoading={isLoading}
