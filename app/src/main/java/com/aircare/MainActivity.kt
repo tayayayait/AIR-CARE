@@ -261,7 +261,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
     private fun showPermissionDeniedMessage() {
         val rootView = binding.bottomSheetContainer
-        Snackbar.make(rootView, R.string.location_permission_denied_message, Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(rootView, R.string.permission_denied_message, Snackbar.LENGTH_SHORT).show()
     }
 
     private fun showLocationUnavailableMessage() {
