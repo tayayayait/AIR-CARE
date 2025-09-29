@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 local.properties
+app/.gradle/
 
 # Editor directories and files
 .vscode/*
