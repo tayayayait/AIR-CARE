@@ -3,6 +3,7 @@ package com.aircare
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
@@ -45,6 +46,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     private lateinit var updatedAtTextView: TextView
     private lateinit var bottomSheetBehavior: com.google.android.material.bottomsheet.BottomSheetBehavior<MaterialCardView>
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var lastGeocodedTarget: LatLng? = null
+    private val geocodeDistanceThresholdMeters = 50f
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -186,6 +189,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
             getString(R.string.updated_placeholder),
             SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA).format(Date())
         )
+
+        val previousTarget = lastGeocodedTarget
+        val shouldGeocode = previousTarget?.let {
+            val results = FloatArray(1)
+            Location.distanceBetween(
+                it.latitude,
+                it.longitude,
+                target.latitude,
+                target.longitude,
+                results
+            )
+            results[0] >= geocodeDistanceThresholdMeters
+        } ?: true
+
+        if (!shouldGeocode) {
+            return
+        }
+
+        lastGeocodedTarget = target
 
         lifecycleScope.launch(Dispatchers.IO) {
             val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
