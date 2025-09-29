@@ -28,6 +28,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.MalformedURLException
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     private lateinit var updatedAtTextView: TextView
     private lateinit var bottomSheetBehavior: com.google.android.material.bottomsheet.BottomSheetBehavior<MaterialCardView>
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var geocodeJob: Job? = null
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -187,11 +189,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
             SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA).format(Date())
         )
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        val currentTarget = LatLng(target.latitude, target.longitude)
+
+        geocodeJob?.cancel()
+        geocodeJob = lifecycleScope.launch(Dispatchers.IO) {
             val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
             if (apiKey.isBlank()) {
                 withContext(Dispatchers.Main) {
-                    if (!isFinishing && !isDestroyed) {
+                    val latestTarget = googleMap?.cameraPosition?.target
+                    if (!isFinishing && !isDestroyed && latestTarget == currentTarget) {
                         addressTextView.text = getString(R.string.address_placeholder)
                     }
                 }
@@ -199,12 +205,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
             }
 
             val address = Geo.reverseGeocode(
-                target.latitude,
-                target.longitude,
+                currentTarget.latitude,
+                currentTarget.longitude,
                 apiKey
             )
             withContext(Dispatchers.Main) {
-                if (!isFinishing && !isDestroyed) {
+                val latestTarget = googleMap?.cameraPosition?.target
+                if (!isFinishing && !isDestroyed && latestTarget == currentTarget) {
                     addressTextView.text = address ?: getString(R.string.address_placeholder)
                 }
             }
