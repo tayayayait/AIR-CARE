@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -20,12 +20,18 @@ const defaultIcon = L.icon({
 });
 
 interface MapViewProps {
-  coordinates: Coordinates;
+  coordinates?: Coordinates | null;
   locationName?: string;
+  onRequestLocation?: () => void;
+  isLocating?: boolean;
 }
 
-const MapView: React.FC<MapViewProps> = ({ coordinates, locationName }) => {
-  const { latitude, longitude } = coordinates;
+const MapView: React.FC<MapViewProps> = ({
+  coordinates,
+  locationName,
+  onRequestLocation,
+  isLocating = false,
+}) => {
   const mapRef = useRef<L.Map | null>(null);
 
   const handleMapCreated = useCallback((mapInstance: L.Map) => {
@@ -39,14 +45,15 @@ const MapView: React.FC<MapViewProps> = ({ coordinates, locationName }) => {
     mapInstance.fitBounds(koreaBounds, { padding: [24, 24], animate: true });
   }, []);
 
-  const handleFlyToLocation = () => {
-    if (!mapRef.current) return;
+  useEffect(() => {
+    if (!coordinates || !mapRef.current) return;
 
+    const { latitude, longitude } = coordinates;
     mapRef.current.flyTo([latitude, longitude], 13, {
       animate: true,
       duration: 2,
     });
-  };
+  }, [coordinates]);
 
   return (
     <div className="w-full h-64 sm:h-80 rounded-xl overflow-hidden shadow-md">
@@ -64,24 +71,30 @@ const MapView: React.FC<MapViewProps> = ({ coordinates, locationName }) => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
           />
-          <Marker position={[latitude, longitude]} icon={defaultIcon}>
-            <Popup>
-              {locationName || '선택한 위치'}<br />
-              위도 {latitude.toFixed(4)}, 경도 {longitude.toFixed(4)}
-            </Popup>
-          </Marker>
+          {coordinates && (
+            <Marker position={[coordinates.latitude, coordinates.longitude]} icon={defaultIcon}>
+              <Popup>
+                {locationName || '선택한 위치'}<br />
+                위도 {coordinates.latitude.toFixed(4)}, 경도 {coordinates.longitude.toFixed(4)}
+              </Popup>
+            </Marker>
+          )}
         </MapContainer>
-        <button
-          type="button"
-          onClick={handleFlyToLocation}
-          className={[
-            'absolute right-3 bottom-3 rounded-full',
-            'bg-white/90 backdrop-blur px-4 py-2 text-sm font-medium',
-            'text-dark-text shadow-lg hover:bg-white transition',
-          ].join(' ')}
-        >
-          내 위치로 이동
-        </button>
+        {onRequestLocation && (
+          <button
+            type="button"
+            onClick={onRequestLocation}
+            className={[
+              'absolute right-3 bottom-3 rounded-full',
+              'bg-white/90 backdrop-blur px-4 py-2 text-sm font-medium',
+              'text-dark-text shadow-lg hover:bg-white transition',
+              isLocating ? 'cursor-not-allowed opacity-70' : '',
+            ].join(' ')}
+            disabled={isLocating}
+          >
+            {isLocating ? '위치 확인 중...' : '내 위치'}
+          </button>
+        )}
       </div>
     </div>
   );
