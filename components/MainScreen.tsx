@@ -16,6 +16,8 @@ interface MainScreenProps {
   error: string | null;
   lastUpdated: Date | null;
   onRefresh: () => void;
+  onRequestLocation: () => void;
+  isLocating: boolean;
 }
 
 const MainScreen: React.FC<MainScreenProps> = ({
@@ -27,6 +29,8 @@ const MainScreen: React.FC<MainScreenProps> = ({
   error,
   lastUpdated,
   onRefresh,
+  onRequestLocation,
+  isLocating,
 }) => {
     
   const timeAgo = useMemo(() => {
@@ -104,12 +108,15 @@ const MainScreen: React.FC<MainScreenProps> = ({
       <Header locationName={locationName} onRefresh={onRefresh} />
       <main className="flex-grow flex flex-col items-center w-full gap-6 py-6">
         <NationwideOverview data={nationwideData} isLoading={isLoading} error={error} />
-        {coordinates && (
-          <div className="w-full max-w-2xl">
-            <h2 className="text-lg font-semibold text-dark-text mb-3">현재 위치</h2>
-            <MapView coordinates={coordinates} locationName={locationName} />
-          </div>
-        )}
+        <div className="w-full max-w-2xl">
+          <h2 className="text-lg font-semibold text-dark-text mb-3">현재 위치</h2>
+          <MapView
+            coordinates={coordinates}
+            locationName={locationName}
+            onRequestLocation={onRequestLocation}
+            isLocating={isLocating}
+          />
+        </div>
         <div className="flex flex-col items-center justify-center w-full">
           {renderContent()}
         </div>
