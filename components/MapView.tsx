@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -8,6 +8,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import type { Coordinates } from '../types';
+import { LocationIcon } from './Icons';
 
 const defaultIcon = L.icon({
   iconUrl: markerIcon,
@@ -33,6 +34,8 @@ const MapView: React.FC<MapViewProps> = ({
   isLocating = false,
 }) => {
   const mapRef = useRef<L.Map | null>(null);
+  const [isExpanded, setIsExpanded] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 640 : true));
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 640 : false));
 
   const handleMapCreated = useCallback((mapInstance: L.Map) => {
     mapRef.current = mapInstance;
@@ -55,9 +58,51 @@ const MapView: React.FC<MapViewProps> = ({
     });
   }, [coordinates]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 640;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsExpanded(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const containerHeight = useMemo(
+    () => (isExpanded || !isMobile ? 'h-72 sm:h-96' : 'h-28 sm:h-96'),
+    [isExpanded, isMobile],
+  );
+
+  const handleToggle = () => {
+    if (!isMobile) return;
+    setIsExpanded((prev) => !prev);
+  };
+
   return (
-    <div className="w-full h-64 sm:h-80 rounded-xl overflow-hidden shadow-md">
-      <div className="relative w-full h-full">
+    <div
+      className={[
+        'relative w-full overflow-hidden rounded-3xl border border-white/20 shadow-xl',
+        'bg-gradient-to-br from-white/90 via-white/70 to-white/90 backdrop-blur-sm transition-all duration-300',
+        containerHeight,
+      ].join(' ')}
+    >
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 sm:hidden">
+        <button
+          type="button"
+          onClick={handleToggle}
+          className="flex items-center justify-center w-16 h-6 rounded-full bg-dark-text/20 hover:bg-dark-text/30 transition-colors"
+          aria-label={isExpanded ? '지도 축소' : '지도 확장'}
+        >
+          <span className="sr-only">{isExpanded ? '지도 축소' : '지도 확장'}</span>
+          <div className="h-1.5 w-12 rounded-full bg-white/70" />
+        </button>
+      </div>
+      <div className={`relative w-full h-full pt-6 sm:pt-0 transition-opacity duration-300 ${isExpanded || !isMobile ? 'opacity-100' : 'opacity-80'}`}>
         <MapContainer
           center={[36.5, 127.5]}
           zoom={7}
@@ -85,14 +130,15 @@ const MapView: React.FC<MapViewProps> = ({
             type="button"
             onClick={onRequestLocation}
             className={[
-              'absolute right-3 bottom-3 rounded-full',
-              'bg-white/90 backdrop-blur px-4 py-2 text-sm font-medium',
-              'text-dark-text shadow-lg hover:bg-white transition',
-              isLocating ? 'cursor-not-allowed opacity-70' : '',
+              'absolute right-4 bottom-4 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold',
+              'bg-gradient-to-r from-brand-blue to-brand-green text-white shadow-xl shadow-brand-blue/30',
+              'hover:from-brand-green hover:to-brand-blue transition disabled:opacity-70 disabled:cursor-not-allowed',
             ].join(' ')}
             disabled={isLocating}
+            aria-label="내 위치로 지도 이동"
           >
-            {isLocating ? '위치 확인 중...' : '내 위치'}
+            <LocationIcon className="h-5 w-5" />
+            <span>{isLocating ? '위치 확인 중…' : '내 위치'}</span>
           </button>
         )}
       </div>
