@@ -14,6 +14,8 @@
               'brand-blue': '#3498db',
               'brand-green': '#2ecc71',
               'brand-yellow': '#f1c40f',
+              'brand-primary': '#60a5fa',
+              'brand-secondary': '#a855f7',
               'light-bg': '#f8f9fa',
               'dark-text': '#2c3e50',
               'medium-text': '#7f8c8d',
@@ -24,6 +26,43 @@
         },
       }
     </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        @keyframes signal-float {
+          0%,
+          100% {
+            transform: translateY(0) scale(1);
+            filter: drop-shadow(0 10px 25px rgba(96, 165, 250, 0.28));
+          }
+          50% {
+            transform: translateY(-8px) scale(1.02);
+            filter: drop-shadow(0 18px 40px rgba(168, 85, 247, 0.35));
+          }
+        }
+
+        .animate-signal-float {
+          animation: signal-float 4s ease-in-out infinite;
+        }
+
+        .badge-glow {
+          position: relative;
+          box-shadow:
+            inset 0 6px 16px rgba(255, 255, 255, 0.32),
+            0 14px 30px rgba(96, 165, 250, 0.35);
+        }
+
+        .badge-glow::after {
+          content: '';
+          position: absolute;
+          inset: -10px;
+          border-radius: 9999px;
+          background: radial-gradient(circle at top, rgba(255, 255, 255, 0.55), transparent 65%);
+          filter: blur(14px);
+          opacity: 0.75;
+          z-index: -1;
+        }
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
