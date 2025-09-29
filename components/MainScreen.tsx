@@ -119,10 +119,18 @@ const MainScreen: React.FC<MainScreenProps> = ({
   const effectiveMapExpanded = isDesktop || isMapExpanded;
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-background">
+    <div
+      className="relative isolate min-h-screen w-full overflow-hidden bg-ocean-dawn flex flex-col items-center before:content-[''] before:absolute before:-top-56 before:-left-32 before:h-[36rem] before:w-[36rem] before:rounded-full before:bg-gradient-to-br before:from-primary/30 before:via-secondary/20 before:to-white/10 before:blur-3xl before:opacity-80 before:-z-10 after:content-[''] after:absolute after:-bottom-64 after:-right-24 after:h-[40rem] after:w-[40rem] after:rounded-full after:bg-gradient-to-br after:from-secondary/25 after:via-primary/20 after:to-white/5 after:blur-3xl after:opacity-70 after:-z-10"
+    >
       <Header locationName={locationName} onRefresh={onRefresh} />
-      <main className="flex-grow flex flex-col items-center w-full gap-6 px-4 sm:px-6 pt-6 pb-36 sm:pb-12">
-        <NationwideOverview data={nationwideData} isLoading={isLoading} error={error} />
+      <main className="relative z-10 flex-grow flex flex-col items-center w-full gap-6 px-4 sm:px-6 pt-6 pb-36 sm:pb-12">
+        <div className="w-full max-w-4xl">
+          <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/30 bg-white/20 backdrop-blur-3xl shadow-[0_25px_70px_-30px_rgba(18,40,76,0.65)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_35px_90px_-30px_rgba(18,40,76,0.7)]">
+            <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-white/30 via-white/10 to-white/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="pointer-events-none absolute inset-px rounded-[2.45rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]" />
+            <NationwideOverview data={nationwideData} isLoading={isLoading} error={error} />
+          </div>
+        </div>
         <div className="w-full max-w-2xl">
           <div
             className={[
