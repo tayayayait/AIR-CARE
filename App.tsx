@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Onboarding from './components/Onboarding';
 import MainScreen from './components/MainScreen';
 import { getAirQualityData } from './services/geminiService';
-import type { RawAirData, SignalData, LocationSelection } from './types';
+import type { RawAirData, SignalData } from './types';
+
+const NATIONWIDE_QUERY = '대한민국';
 
 const App: React.FC = () => {
-  const [locationSelection, setLocationSelection] = useState<LocationSelection | null>(null);
-  const [lastQuery, setLastQuery] = useState<string | null>(null);
   const [rawAirData, setRawAirData] = useState<RawAirData | null>(null);
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -17,15 +16,15 @@ const App: React.FC = () => {
     const isMaskOn = data.pm10 > 80 || data.pm25 > 35;
     const isVentilateOn = !isMaskOn;
     const isHumidifyOn = data.humidity < 40;
-    
+
     return { isMaskOn, isVentilateOn, isHumidifyOn };
   }, []);
-  
-  const fetchData = useCallback(async (loc: string) => {
+
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getAirQualityData(loc);
+      const data = await getAirQualityData(NATIONWIDE_QUERY);
       setRawAirData(data);
       setSignalData(processSignalLogic(data));
       setLastUpdated(new Date());
@@ -37,55 +36,21 @@ const App: React.FC = () => {
     }
   }, [processSignalLogic]);
 
-  const formatLocationQuery = useCallback((selection: LocationSelection): string | null => {
-    const parts: string[] = [];
-    if (selection.city) {
-      parts.push(selection.city);
-    }
-    if (selection.coordinates) {
-      const { latitude, longitude } = selection.coordinates;
-      parts.push(`위도 ${latitude.toFixed(4)}, 경도 ${longitude.toFixed(4)}`);
-    }
-    return parts.length ? parts.join(' | ') : null;
-  }, []);
-
   useEffect(() => {
-    if (locationSelection) {
-      const query = formatLocationQuery(locationSelection);
-      if (query) {
-        setLastQuery(query);
-        fetchData(query);
-      } else {
-        setError('위치를 확인할 수 없습니다. 다시 시도해주세요.');
-      }
-    }
-  }, [locationSelection, formatLocationQuery, fetchData]);
+    void fetchData();
+  }, [fetchData]);
 
-  const handleLocationSubmit = (newLocation: LocationSelection) => {
-    setRawAirData(null);
-    setSignalData(null);
-    setLastUpdated(null);
-    setLocationSelection(newLocation);
-  };
-
-  const handleRefresh = () => {
-    if (lastQuery) {
-      fetchData(lastQuery);
-    }
-  };
-
-  if (!locationSelection) {
-    return <Onboarding onSubmit={handleLocationSubmit} />;
-  }
+  const handleRefresh = useCallback(() => {
+    void fetchData();
+  }, [fetchData]);
 
   return (
     <MainScreen
       locationName={
-        locationSelection.city
-          ? rawAirData?.locationName || locationSelection.city
-          : '현재 위치'
+        rawAirData ? `${rawAirData.locationName} · 전국 요약` : '대한민국 대기질 요약'
       }
-      coordinates={locationSelection.coordinates || null}
+      nationwideData={rawAirData}
+      coordinates={null}
       signalData={signalData}
       isLoading={isLoading}
       error={error}
