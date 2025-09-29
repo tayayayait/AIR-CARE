@@ -11,14 +11,25 @@
         theme: {
           extend: {
             colors: {
-              'brand-blue': '#3498db',
-              'brand-green': '#2ecc71',
-              'brand-yellow': '#f1c40f',
-              'light-bg': '#f8f9fa',
-              'dark-text': '#2c3e50',
-              'medium-text': '#7f8c8d',
-              'light-text': '#bdc3c7',
-              'danger-red': '#e74c3c',
+              primary: '#0967FF',
+              secondary: '#7CB7FF',
+              background: '#E2F0FF',
+              surface: '#F6FAFF',
+              'primary-soft': '#D6E7FF',
+              'secondary-soft': '#F0F6FF',
+              'ink-strong': '#1B2A4B',
+              'ink-muted': '#4B5B7F',
+              'ink-soft': '#96A4C1',
+              danger: '#FF5A5F',
+              'danger-soft': '#FFE5E8',
+            },
+            backgroundImage: {
+              'aurora-sky':
+                'linear-gradient(135deg, #0967FF 0%, #7CB7FF 48%, #E2F0FF 100%)',
+              'ocean-dawn':
+                'linear-gradient(120deg, rgba(9,103,255,0.95) 0%, rgba(124,183,255,0.92) 55%, rgba(226,240,255,0.9) 100%)',
+              'horizon-glow':
+                'linear-gradient(180deg, #E2F0FF 0%, rgba(124,183,255,0.9) 52%, rgba(9,103,255,0.85) 100%)',
             },
           },
         },
@@ -35,7 +46,7 @@
 }
 </script>
 </head>
-  <body class="bg-light-bg">
+  <body class="bg-background">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

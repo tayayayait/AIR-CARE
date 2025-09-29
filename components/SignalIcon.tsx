@@ -17,13 +17,17 @@ const SignalIcon: React.FC<SignalIconProps> = ({ label, isOn, icon, onColor, off
 
   return (
     <div className={`${baseClasses} ${isOn ? 'bg-white' : 'bg-white'}`}>
-       <div className={`${iconWrapperClasses} ${colorClasses}`}>
-        <div className="w-10 h-10 sm:w-12 sm:h-12">
-            {icon}
-        </div>
+      <div className={`${iconWrapperClasses} ${colorClasses}`}>
+        <div className="w-10 h-10 sm:w-12 sm:h-12">{icon}</div>
       </div>
-      <h3 className="text-base sm:text-xl font-bold text-dark-text">{label}</h3>
-      <p className={`text-sm sm:text-base font-medium ${isOn ? 'text-dark-text' : 'text-medium-text'}`}>{recommendation}</p>
+      <h3 className="text-base sm:text-xl font-bold text-ink-strong">{label}</h3>
+      <p
+        className={`text-sm sm:text-base font-medium ${
+          isOn ? 'text-ink-strong' : 'text-ink-muted'
+        }`}
+      >
+        {recommendation}
+      </p>
     </div>
   );
 };

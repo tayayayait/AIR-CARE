@@ -87,7 +87,7 @@ const MapView: React.FC<MapViewProps> = ({
             className={[
               'absolute right-3 bottom-3 rounded-full',
               'bg-white/90 backdrop-blur px-4 py-2 text-sm font-medium',
-              'text-dark-text shadow-lg hover:bg-white transition',
+              'text-ink-strong shadow-lg hover:bg-white transition',
               isLocating ? 'cursor-not-allowed opacity-70' : '',
             ].join(' ')}
             disabled={isLocating}
