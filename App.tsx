@@ -61,12 +61,49 @@ const App: React.FC = () => {
     }
   }, [locationSelection, formatLocationQuery, fetchData]);
 
-  const handleLocationSubmit = (newLocation: LocationSelection) => {
+  const updateLocationSelection = useCallback((newLocation: LocationSelection) => {
     setRawAirData(null);
     setSignalData(null);
     setLastUpdated(null);
     setLocationSelection(newLocation);
+  }, []);
+
+  const handleLocationSubmit = (newLocation: LocationSelection) => {
+    updateLocationSelection(newLocation);
   };
+
+  const handleUseCurrentLocation = useCallback(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setError('현재 브라우저에서 위치 서비스를 지원하지 않습니다.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const selection: LocationSelection = {
+          city: null,
+          coordinates: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          },
+        };
+        updateLocationSelection(selection);
+      },
+      (geoError) => {
+        console.error(geoError);
+        setError('현재 위치를 가져오지 못했습니다. 위치 권한을 확인해주세요.');
+        setIsLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      },
+    );
+  }, [updateLocationSelection]);
 
   const handleRefresh = () => {
     if (lastQuery) {
@@ -91,6 +128,7 @@ const App: React.FC = () => {
       error={error}
       lastUpdated={lastUpdated}
       onRefresh={handleRefresh}
+      onRequestLocation={handleUseCurrentLocation}
     />
   );
 };

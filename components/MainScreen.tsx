@@ -15,6 +15,7 @@ interface MainScreenProps {
   error: string | null;
   lastUpdated: Date | null;
   onRefresh: () => void;
+  onRequestLocation: () => void;
 }
 
 const MainScreen: React.FC<MainScreenProps> = ({
@@ -25,6 +26,7 @@ const MainScreen: React.FC<MainScreenProps> = ({
   error,
   lastUpdated,
   onRefresh,
+  onRequestLocation,
 }) => {
     
   const timeAgo = useMemo(() => {
@@ -88,12 +90,26 @@ const MainScreen: React.FC<MainScreenProps> = ({
     <div className="min-h-screen w-full flex flex-col items-center p-4 sm:p-6 bg-light-bg">
       <Header locationName={locationName} onRefresh={onRefresh} />
       <main className="flex-grow flex flex-col items-center w-full gap-6 py-6">
-        {coordinates && (
-          <div className="w-full max-w-2xl">
-            <h2 className="text-lg font-semibold text-dark-text mb-3">현재 위치</h2>
-            <MapView coordinates={coordinates} locationName={locationName} />
+        <div className="w-full max-w-2xl">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-dark-text">현재 위치</h2>
+            <button
+              type="button"
+              onClick={onRequestLocation}
+              className={[
+                'px-3 py-1.5 rounded-full text-sm font-medium',
+                'bg-brand-blue text-white shadow hover:bg-brand-blue/90 transition',
+              ].join(' ')}
+            >
+              내 위치
+            </button>
           </div>
-        )}
+          <MapView
+            coordinates={coordinates}
+            locationName={locationName}
+            onRequestLocation={onRequestLocation}
+          />
+        </div>
         <div className="flex flex-col items-center justify-center w-full">
           {renderContent()}
         </div>
