@@ -14,7 +14,7 @@ const NationwideOverview: React.FC<NationwideOverviewProps> = ({ data, isLoading
       return (
         <div className="flex flex-col items-center justify-center gap-3 py-8">
           <div className="h-12 w-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" aria-hidden />
-          <p className="text-base text-medium-text">전국 데이터를 불러오는 중...</p>
+          <p className="text-base text-slate-300">전국 데이터를 불러오는 중...</p>
         </div>
       );
     }
@@ -25,43 +25,56 @@ const NationwideOverview: React.FC<NationwideOverviewProps> = ({ data, isLoading
 
     if (data) {
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl bg-light-bg p-4 text-center">
-            <p className="text-sm text-medium-text">주요 지역</p>
-            <p className="text-2xl font-semibold text-dark-text">{data.locationName}</p>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <div className="group relative transform-gpu overflow-hidden rounded-2xl bg-gradient-to-br from-white/30 via-white/10 to-transparent p-[1px] shadow-xl shadow-slate-950/50 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_25px_60px_-20px_rgba(15,23,42,0.8)] sm:translate-y-2">
+            <div className="relative flex h-full flex-col items-center justify-center gap-2 rounded-[1.75rem] bg-slate-900/75 px-6 py-8 text-center backdrop-blur-sm ring-1 ring-white/15">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-blue/20 via-transparent to-brand-green/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <p className="relative text-sm font-medium text-slate-300">주요 지역</p>
+              <p className="relative text-3xl font-semibold text-white">{data.locationName}</p>
+            </div>
           </div>
-          <div className="rounded-2xl bg-light-bg p-4 text-center">
-            <p className="text-sm text-medium-text">미세먼지 (PM10)</p>
-            <p className="text-3xl font-bold text-dark-text">{Math.round(data.pm10)} ㎍/㎥</p>
+          <div className="group relative transform-gpu overflow-hidden rounded-2xl bg-gradient-to-br from-white/30 via-white/10 to-transparent p-[1px] shadow-xl shadow-slate-950/50 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_25px_60px_-20px_rgba(15,23,42,0.8)] sm:-translate-y-1">
+            <div className="relative flex h-full flex-col items-center justify-center gap-2 rounded-[1.75rem] bg-slate-900/75 px-6 py-8 text-center backdrop-blur-sm ring-1 ring-white/15">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-yellow/25 via-transparent to-brand-blue/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <p className="relative text-sm font-medium text-slate-300">미세먼지 (PM10)</p>
+              <p className="relative text-3xl font-bold text-white">{Math.round(data.pm10)} ㎍/㎥</p>
+            </div>
           </div>
-          <div className="rounded-2xl bg-light-bg p-4 text-center">
-            <p className="text-sm text-medium-text">초미세먼지 (PM2.5)</p>
-            <p className="text-3xl font-bold text-dark-text">{Math.round(data.pm25)} ㎍/㎥</p>
+          <div className="group relative transform-gpu overflow-hidden rounded-2xl bg-gradient-to-br from-white/30 via-white/10 to-transparent p-[1px] shadow-xl shadow-slate-950/50 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_25px_60px_-20px_rgba(15,23,42,0.8)] sm:translate-y-3">
+            <div className="relative flex h-full flex-col items-center justify-center gap-2 rounded-[1.75rem] bg-slate-900/75 px-6 py-8 text-center backdrop-blur-sm ring-1 ring-white/15">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-green/20 via-transparent to-brand-blue/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <p className="relative text-sm font-medium text-slate-300">초미세먼지 (PM2.5)</p>
+              <p className="relative text-3xl font-bold text-white">{Math.round(data.pm25)} ㎍/㎥</p>
+            </div>
           </div>
-          <div className="rounded-2xl bg-light-bg p-4 text-center sm:col-span-3 sm:max-w-md sm:mx-auto">
-            <p className="text-sm text-medium-text">상대 습도</p>
-            <p className="text-3xl font-bold text-dark-text">{Math.round(data.humidity)}%</p>
+          <div className="group relative transform-gpu overflow-hidden rounded-2xl bg-gradient-to-br from-white/30 via-white/10 to-transparent p-[1px] shadow-xl shadow-slate-950/50 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_25px_60px_-20px_rgba(15,23,42,0.8)] sm:col-span-3 sm:mx-auto sm:max-w-2xl sm:translate-y-1">
+            <div className="relative flex h-full flex-col items-center justify-center gap-3 rounded-[1.75rem] bg-slate-900/75 px-6 py-8 text-center backdrop-blur-sm ring-1 ring-white/15 sm:px-10 sm:py-10">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-blue/25 via-brand-green/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <p className="relative text-sm font-medium text-slate-300">상대 습도</p>
+              <p className="relative text-4xl font-bold text-white">{Math.round(data.humidity)}%</p>
+              <span className="relative text-xs uppercase tracking-[0.2em] text-slate-400">Comfort Guidance</span>
+            </div>
           </div>
         </div>
       );
     }
 
-    return <p className="text-base text-medium-text text-center">대기질 정보를 준비하고 있어요.</p>;
+    return <p className="text-base text-center text-slate-300">대기질 정보를 준비하고 있어요.</p>;
   };
 
   return (
-    <section className="w-full max-w-4xl mx-auto bg-white rounded-3xl shadow-md p-6 sm:p-10">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <section className="relative flex w-full flex-col gap-8 px-6 py-8 text-slate-100 sm:px-10 sm:py-12">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <LogoIcon className="h-12 w-12 text-brand-blue" />
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-dark-text">대한민국 대기질 한눈에 보기</h2>
-            <p className="text-medium-text text-base sm:text-lg">
+          <LogoIcon className="h-12 w-12 text-brand-blue drop-shadow-[0_8px_18px_rgba(56,189,248,0.35)]" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold sm:text-3xl">대한민국 대기질 한눈에 보기</h2>
+            <p className="max-w-xl text-base text-slate-300 sm:text-lg">
               전국 주요 지역의 대기질을 요약해 실내 생활 신호를 안내해드려요.
             </p>
           </div>
         </div>
-        <div className="text-sm text-medium-text sm:text-right">
+        <div className="max-w-xs text-sm text-slate-400 sm:text-right">
           <p>실시간 데이터를 기반으로 신호가 구성돼요.</p>
           <p>변화가 느껴지면 새로고침해 최신 정보를 확인하세요.</p>
         </div>

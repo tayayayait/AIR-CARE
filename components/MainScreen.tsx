@@ -104,12 +104,26 @@ const MainScreen: React.FC<MainScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center p-4 sm:p-6 bg-light-bg">
+    <div
+      className="relative min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_top,_#0b1220,_#020617_65%)] p-4 text-slate-100 sm:p-6
+      before:absolute before:-left-32 before:top-[-10%] before:h-3/4 before:w-96 before:rounded-full before:bg-[radial-gradient(circle,_rgba(56,189,248,0.35),_transparent_70%)] before:blur-3xl before:content-[''] before:opacity-80
+      after:absolute after:-right-40 after:bottom-[-15%] after:h-[28rem] after:w-[32rem] after:rounded-full after:bg-[radial-gradient(circle,_rgba(16,185,129,0.3),_transparent_70%)] after:blur-3xl after:content-[''] after:opacity-70"
+    >
       <Header locationName={locationName} onRefresh={onRefresh} />
-      <main className="flex-grow flex flex-col items-center w-full gap-6 py-6">
-        <NationwideOverview data={nationwideData} isLoading={isLoading} error={error} />
+      <main className="relative flex w-full flex-grow flex-col items-center gap-8 py-8">
+        <div className="w-full max-w-5xl">
+          <div className="group relative transform-gpu transition-all duration-500 ease-out hover:-translate-y-1">
+            <div className="absolute inset-4 -z-10 rounded-[2.25rem] bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/10 bg-clip-padding shadow-[0_32px_80px_-40px_rgba(15,23,42,0.75)] backdrop-blur-2xl transition-shadow duration-500 group-hover:shadow-[0_40px_95px_-45px_rgba(15,23,42,0.85)]">
+              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.25),_transparent_70%)] opacity-50" />
+              <div className="relative z-10">
+                <NationwideOverview data={nationwideData} isLoading={isLoading} error={error} />
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="w-full max-w-2xl">
-          <h2 className="text-lg font-semibold text-dark-text mb-3">현재 위치</h2>
+          <h2 className="mb-3 text-lg font-semibold text-slate-100">현재 위치</h2>
           <MapView
             coordinates={coordinates}
             locationName={locationName}
@@ -121,7 +135,7 @@ const MainScreen: React.FC<MainScreenProps> = ({
           {renderContent()}
         </div>
       </main>
-      <footer className="w-full text-center p-4 text-medium-text">
+      <footer className="w-full p-4 text-center text-slate-400">
         {lastUpdated && !error && `업데이트: ${timeAgo}`}
       </footer>
     </div>
