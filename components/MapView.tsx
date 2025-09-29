@@ -24,6 +24,7 @@ interface MapViewProps {
   locationName?: string;
   onRequestLocation?: () => void;
   isLocating?: boolean;
+  isExpanded?: boolean;
 }
 
 const MapView: React.FC<MapViewProps> = ({
@@ -31,6 +32,7 @@ const MapView: React.FC<MapViewProps> = ({
   locationName,
   onRequestLocation,
   isLocating = false,
+  isExpanded = true,
 }) => {
   const mapRef = useRef<L.Map | null>(null);
 
@@ -55,9 +57,24 @@ const MapView: React.FC<MapViewProps> = ({
     });
   }, [coordinates]);
 
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const mapInstance = mapRef.current;
+    const timeout = window.setTimeout(() => {
+      mapInstance.invalidateSize();
+    }, 240);
+
+    return () => window.clearTimeout(timeout);
+  }, [isExpanded]);
+
   return (
-    <div className="w-full h-64 sm:h-80 rounded-xl overflow-hidden shadow-md">
-      <div className="relative w-full h-full">
+    <div
+      className={[
+        'relative w-full h-full rounded-3xl overflow-hidden shadow-xl border border-white/10',
+        'bg-background/90 backdrop-blur supports-backdrop-blur:bg-background/70 transition-colors',
+      ].join(' ')}
+    >
+      <div className="absolute inset-0">
         <MapContainer
           center={[36.5, 127.5]}
           zoom={7}
@@ -85,14 +102,15 @@ const MapView: React.FC<MapViewProps> = ({
             type="button"
             onClick={onRequestLocation}
             className={[
-              'absolute right-3 bottom-3 rounded-full',
-              'bg-white/90 backdrop-blur px-4 py-2 text-sm font-medium',
-              'text-ink-strong shadow-lg hover:bg-white transition',
+              'absolute right-4 bottom-4 h-14 w-14 rounded-full shadow-xl',
+              'bg-gradient-to-br from-primary-soft to-secondary-soft text-ink-strong font-semibold',
+              'hover:from-primary-soft/90 hover:to-secondary-soft/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/40',
               isLocating ? 'cursor-not-allowed opacity-70' : '',
             ].join(' ')}
             disabled={isLocating}
+            aria-label="내 위치로 이동"
           >
-            {isLocating ? '위치 확인 중...' : '내 위치'}
+            {isLocating ? '로딩' : '내 위치'}
           </button>
         )}
       </div>
