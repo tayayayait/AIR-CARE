@@ -22,6 +22,8 @@
               'ink-soft': '#96A4C1',
               danger: '#FF5A5F',
               'danger-soft': '#FFE5E8',
+              'brand-primary': '#0967FF',
+              'brand-secondary': '#7CB7FF',
             },
             backgroundImage: {
               'aurora-sky':
@@ -35,6 +37,40 @@
         },
       }
     </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        @keyframes signal-float {
+          0%,
+          100% {
+            transform: translateY(0) scale(1);
+          }
+          50% {
+            transform: translateY(-6px) scale(1.02);
+          }
+        }
+
+        @keyframes signal-pulse {
+          0%,
+          100% {
+            box-shadow: 0 14px 35px rgba(9, 103, 255, 0.18);
+          }
+          50% {
+            box-shadow: 0 20px 48px rgba(9, 103, 255, 0.28);
+          }
+        }
+
+        .animate-signal-active {
+          animation: signal-float 6s ease-in-out infinite, signal-pulse 3.5s ease-in-out infinite;
+        }
+
+        .signal-badge-glow {
+          box-shadow:
+            inset 0 6px 14px rgba(255, 255, 255, 0.35),
+            0 0 0 4px rgba(255, 255, 255, 0.3),
+            0 24px 48px rgba(9, 103, 255, 0.35);
+        }
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
