@@ -22,7 +22,7 @@ const ShareButton: React.FC = () => {
   return (
     <button
       onClick={handleShare}
-      className="p-2 text-medium-text hover:text-dark-text transition-colors"
+      className="p-2 text-ink-muted hover:text-ink-strong transition-colors"
       aria-label="이 앱 공유하기"
     >
       <ShareIcon className="h-6 w-6" />
