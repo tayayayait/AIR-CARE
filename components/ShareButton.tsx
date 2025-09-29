@@ -1,7 +1,11 @@
 import React from 'react';
 import { ShareIcon } from './Icons';
 
-const ShareButton: React.FC = () => {
+interface ShareButtonProps {
+  className?: string;
+}
+
+const ShareButton: React.FC<ShareButtonProps> = ({ className = 'p-2 text-medium-text hover:text-dark-text transition-colors' }) => {
   const handleShare = async () => {
     const shareData = {
       title: '에어케어 앱',
@@ -22,7 +26,7 @@ const ShareButton: React.FC = () => {
   return (
     <button
       onClick={handleShare}
-      className="p-2 text-medium-text hover:text-dark-text transition-colors"
+      className={className}
       aria-label="이 앱 공유하기"
     >
       <ShareIcon className="h-6 w-6" />
