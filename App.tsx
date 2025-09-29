@@ -13,6 +13,7 @@ const App: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
   const [activeLocationQuery, setActiveLocationQuery] = useState<string>(NATIONWIDE_QUERY);
+  const [activeLocationLabel, setActiveLocationLabel] = useState<string>('대한민국 주요 지역');
   const [isLocating, setIsLocating] = useState<boolean>(false);
 
   const processSignalLogic = useCallback((data: RawAirData): SignalData => {
@@ -23,7 +24,7 @@ const App: React.FC = () => {
     return { isMaskOn, isVentilateOn, isHumidifyOn };
   }, []);
 
-  const fetchData = useCallback(async (query: string) => {
+  const fetchData = useCallback(async (query: string, displayName?: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -32,6 +33,7 @@ const App: React.FC = () => {
       setSignalData(processSignalLogic(data));
       setLastUpdated(new Date());
       setActiveLocationQuery(query);
+      setActiveLocationLabel(displayName ?? query);
     } catch (err) {
       console.error(err);
       setError('데이터를 불러올 수 없습니다. 연결 상태를 확인하고 다시 시도해주세요.');
@@ -58,21 +60,28 @@ const App: React.FC = () => {
       const data = await response.json();
       const address = data.address ?? {};
 
-      const district =
+      const locality =
+        address.neighbourhood ||
+        address.suburb ||
+        address.quarter ||
+        address.borough ||
+        address.village ||
+        address.town ||
         address.city_district ||
         address.district ||
-        address.county ||
-        address.borough ||
-        address.suburb;
+        address.county;
       const city =
         address.city ||
-        address.town ||
         address.municipality ||
-        address.state;
+        address.state_district ||
+        address.state ||
+        address.region;
       const province = address.state || address.region || address.country;
 
-      const query = [district, city].filter(Boolean).join(' ');
-      return (query || city || province || NATIONWIDE_QUERY) as string;
+      const displayName = [locality, city].filter(Boolean).join(', ') || city || province || NATIONWIDE_QUERY;
+      const query = [locality, city].filter(Boolean).join(' ') || city || province || NATIONWIDE_QUERY;
+
+      return { query, displayName } as const;
     } catch (geoError) {
       console.error('Failed to resolve location name', geoError);
       throw new Error('현재 위치 정보를 확인할 수 없습니다.');
@@ -80,12 +89,12 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void fetchData(NATIONWIDE_QUERY);
+    void fetchData(NATIONWIDE_QUERY, '대한민국 주요 지역');
   }, [fetchData]);
 
   const handleRefresh = useCallback(() => {
-    void fetchData(activeLocationQuery);
-  }, [activeLocationQuery, fetchData]);
+    void fetchData(activeLocationQuery, activeLocationLabel);
+  }, [activeLocationLabel, activeLocationQuery, fetchData]);
 
   const handleRequestLocation = useCallback(() => {
     if (!('geolocation' in navigator)) {
@@ -105,9 +114,10 @@ const App: React.FC = () => {
         } satisfies Coordinates;
 
         try {
-          const query = await resolveLocationQuery(nextCoordinates);
-          await fetchData(query);
+          const { query, displayName } = await resolveLocationQuery(nextCoordinates);
           setCoordinates(nextCoordinates);
+          setActiveLocationLabel(displayName);
+          await fetchData(query, displayName);
         } catch (geoError) {
           console.error(geoError);
           setError('현재 위치의 대기질 정보를 불러오지 못했습니다.');
@@ -129,15 +139,15 @@ const App: React.FC = () => {
     );
   }, [fetchData, resolveLocationQuery]);
 
+  const headerLocationName = coordinates
+    ? activeLocationLabel
+    : activeLocationLabel
+      ? `${activeLocationLabel} · 전국 요약`
+      : '대한민국 대기질 요약';
+
   return (
     <MainScreen
-      locationName={
-        coordinates
-          ? rawAirData?.locationName ?? '현재 위치'
-          : rawAirData
-            ? `${rawAirData.locationName} · 전국 요약`
-            : '대한민국 대기질 요약'
-      }
+      locationName={headerLocationName}
       nationwideData={rawAirData}
       coordinates={coordinates}
       signalData={signalData}
