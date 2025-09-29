@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.location.Location
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,6 +48,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     private lateinit var bottomSheetBehavior: com.google.android.material.bottomsheet.BottomSheetBehavior<MaterialCardView>
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var geocodeJob: Job? = null
+    private var lastGeocodedTarget: LatLng? = null
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -191,7 +193,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
 
         val currentTarget = LatLng(target.latitude, target.longitude)
 
+        lastGeocodedTarget?.let { previousTarget ->
+            val results = FloatArray(1)
+            Location.distanceBetween(
+                previousTarget.latitude,
+                previousTarget.longitude,
+                currentTarget.latitude,
+                currentTarget.longitude,
+                results
+            )
+            if (results[0] < MIN_DISTANCE_TO_GEOCODE_METERS) {
+                return
+            }
+        }
+
         geocodeJob?.cancel()
+        lastGeocodedTarget = currentTarget
         geocodeJob = lifecycleScope.launch(Dispatchers.IO) {
             val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
             if (apiKey.isBlank()) {
@@ -216,6 +233,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
                 }
             }
         }
+    }
+
+    companion object {
+        private const val MIN_DISTANCE_TO_GEOCODE_METERS = 50f
     }
 
     private fun addHeatmapOverlay(map: GoogleMap) {
