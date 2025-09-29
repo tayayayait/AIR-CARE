@@ -22,6 +22,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.TileOverlay
 import com.google.android.gms.maps.model.TileOverlayOptions
 import com.google.android.gms.maps.model.UrlTileProvider
 import com.google.android.material.appbar.MaterialToolbar
@@ -45,6 +46,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     private lateinit var updatedAtTextView: TextView
     private lateinit var bottomSheetBehavior: com.google.android.material.bottomsheet.BottomSheetBehavior<MaterialCardView>
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var currentTileOverlay: TileOverlay? = null
+    private var currentPalette: String = PALETTE_DEFAULT
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -68,11 +71,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
         coordinatesTextView = binding.textCoordinates
         updatedAtTextView = binding.textUpdatedAt
 
+        currentPalette = savedInstanceState?.getString(KEY_SELECTED_PALETTE) ?: PALETTE_DEFAULT
+
         val bottomSheetCard: MaterialCardView = binding.bottomSheetContainer
         bottomSheetBehavior = com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheetCard)
         bottomSheetBehavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        val paletteToggleGroup = binding.paletteToggleGroup
+        paletteToggleGroup.check(getButtonIdForPalette(currentPalette))
+        paletteToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) {
+                return@addOnButtonCheckedListener
+            }
+            val selectedPalette = getPaletteForButton(checkedId) ?: return@addOnButtonCheckedListener
+            if (selectedPalette == currentPalette) {
+                return@addOnButtonCheckedListener
+            }
+            currentPalette = selectedPalette
+            refreshHeatmapOverlay()
+        }
 
         val seoul = LatLng(37.5665, 126.9780)
         coordinatesTextView.text = String.format(
@@ -138,7 +157,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
         map.uiSettings.isMyLocationButtonEnabled = true
         map.uiSettings.isZoomControlsEnabled = true
 
-        addHeatmapOverlay(map)
+        addHeatmapOverlay(map, currentPalette)
 
         map.setOnCameraIdleListener(this)
         map.setOnMyLocationButtonClickListener {
@@ -211,16 +230,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
         }
     }
 
-    private fun addHeatmapOverlay(map: GoogleMap) {
+    private fun refreshHeatmapOverlay() {
+        val map = googleMap ?: return
+        addHeatmapOverlay(map, currentPalette)
+    }
+
+    private fun addHeatmapOverlay(map: GoogleMap, palette: String) {
         val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
         if (apiKey.isBlank()) return
 
+        val paletteQuery = if (palette == PALETTE_DEFAULT) "" else "&palette=$palette"
         val tileProvider = object : UrlTileProvider(256, 256) {
             override fun getTileUrl(x: Int, y: Int, zoom: Int): URL? {
                 val url = String.format(
                     Locale.US,
-                    "https://tile.googleapis.com/v1/airquality/heatmap/%d/%d/%d.png?key=%s",
-                    zoom, x, y, apiKey
+                    "https://tile.googleapis.com/v1/airquality/heatmap/%d/%d/%d.png?key=%s%s",
+                    zoom, x, y, apiKey, paletteQuery
                 )
                 return try {
                     URL(url)
@@ -229,11 +254,42 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
                 }
             }
         }
-        map.addTileOverlay(
+        currentTileOverlay?.remove()
+        currentTileOverlay = map.addTileOverlay(
             TileOverlayOptions()
                 .tileProvider(tileProvider)
-                .transparency(0.35f)
+                .transparency(getTransparencyForPalette(palette))
         )
+    }
+
+    private fun getTransparencyForPalette(palette: String): Float {
+        return when (palette) {
+            PALETTE_HIGH_CONTRAST -> 0.2f
+            PALETTE_COLOR_BLIND -> 0.3f
+            else -> 0.35f
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(KEY_SELECTED_PALETTE, currentPalette)
+    }
+
+    private fun getButtonIdForPalette(palette: String): Int {
+        return when (palette) {
+            PALETTE_HIGH_CONTRAST -> R.id.button_palette_high_contrast
+            PALETTE_COLOR_BLIND -> R.id.button_palette_color_blind
+            else -> R.id.button_palette_default
+        }
+    }
+
+    private fun getPaletteForButton(buttonId: Int): String? {
+        return when (buttonId) {
+            R.id.button_palette_default -> PALETTE_DEFAULT
+            R.id.button_palette_high_contrast -> PALETTE_HIGH_CONTRAST
+            R.id.button_palette_color_blind -> PALETTE_COLOR_BLIND
+            else -> null
+        }
     }
 
     private fun enableMyLocation() {
@@ -267,5 +323,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnCamera
     private fun showLocationUnavailableMessage() {
         val rootView = binding.bottomSheetContainer
         Snackbar.make(rootView, R.string.location_unavailable_message, Snackbar.LENGTH_SHORT).show()
+    }
+
+    companion object {
+        private const val KEY_SELECTED_PALETTE = "selected_palette"
+        private const val PALETTE_DEFAULT = "default"
+        private const val PALETTE_HIGH_CONTRAST = "high_contrast"
+        private const val PALETTE_COLOR_BLIND = "color_blind"
     }
 }
