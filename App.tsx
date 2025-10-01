@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import MainScreen from './components/MainScreen';
 import { getAirQualityData } from './services/geminiService';
+import { NOMINATIM_USER_AGENT } from './services/nominatim';
 import type { Coordinates, RawAirData, SignalData } from './types';
 
 const NATIONWIDE_QUERY = '대한민국';
@@ -48,7 +49,8 @@ const App: React.FC = () => {
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&accept-language=ko&zoom=10`,
         {
           headers: {
-            'Accept': 'application/json',
+            Accept: 'application/json',
+            'User-Agent': NOMINATIM_USER_AGENT,
           },
         },
       );
