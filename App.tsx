@@ -179,10 +179,12 @@ const App: React.FC = () => {
     : activeLocationLabel
       ? `${activeLocationLabel} · 전국 요약`
       : '대한민국 대기질 요약';
+  const isActiveNationwide = activeLocationQuery === NATIONWIDE_QUERY;
 
   return (
     <MainScreen
       locationName={headerLocationName}
+      activeAirData={activeAirData}
       nationwideData={nationwideData}
       coordinates={coordinates}
       forecastRows={forecastRows}
@@ -193,6 +195,7 @@ const App: React.FC = () => {
       onRefresh={handleRefresh}
       onRequestLocation={handleRequestLocation}
       isLocating={isLocating}
+      isActiveNationwide={isActiveNationwide}
     />
   );
 };

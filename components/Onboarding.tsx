@@ -6,29 +6,59 @@ interface NationwideOverviewProps {
   data: RawAirData | null;
   isLoading: boolean;
   error: string | null;
+  variant?: 'nationwide' | 'local';
+  fallbackLocationName?: string;
 }
 
-const NationwideOverview: React.FC<NationwideOverviewProps> = ({ data, isLoading, error }) => {
+const NationwideOverview: React.FC<NationwideOverviewProps> = ({
+  data,
+  isLoading,
+  error,
+  variant = 'nationwide',
+  fallbackLocationName,
+}) => {
+  const isNationwide = variant === 'nationwide';
+  const locationLabel = data?.locationName ?? fallbackLocationName ?? (isNationwide ? '대한민국 주요 지역' : '현재 위치');
+  const title = isNationwide
+    ? '대한민국 대기질 한눈에 보기'
+    : `${locationLabel} 대기질 한눈에 보기`;
+  const description = isNationwide
+    ? '전국 주요 지역의 대기질을 요약해 실내 생활 신호를 안내해드려요.'
+    : '현재 위치 대기질을 바탕으로 실내 생활 신호를 안내해드려요.';
+  const helperMessages = isNationwide
+    ? ['실시간 데이터를 기반으로 신호가 구성돼요.', '변화가 느껴지면 새로고침해 최신 정보를 확인하세요.']
+    : ['실내 공기질 관리를 위해 현재 위치 데이터를 살펴보세요.', '변화가 느껴지면 새로고침해 최신 정보를 확인하세요.'];
+  const loadingMessage = isNationwide ? '전국 데이터를 불러오는 중...' : '현재 위치 데이터를 불러오는 중...';
+  const emptyMessage = isNationwide
+    ? '대기질 정보를 준비하고 있어요.'
+    : '현재 위치의 대기질 정보를 준비하고 있어요.';
+  const errorTitle = isNationwide ? '전국 데이터를 불러오지 못했습니다.' : '현재 위치 데이터를 불러오지 못했습니다.';
+
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="flex flex-col items-center justify-center gap-3 py-8">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin" aria-hidden />
-          <p className="text-base text-ink-muted">전국 데이터를 불러오는 중...</p>
+          <p className="text-base text-ink-muted">{loadingMessage}</p>
         </div>
       );
     }
 
     if (error) {
-      return <p className="text-base font-medium text-danger text-center">{error}</p>;
+      return (
+        <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
+          <p className="text-base font-semibold text-danger">{errorTitle}</p>
+          <p className="text-sm text-ink-muted">{error}</p>
+        </div>
+      );
     }
 
     if (data) {
       const stats = [
         {
           key: 'location',
-          label: '주요 지역',
-          value: data.locationName,
+          label: isNationwide ? '주요 지역' : '측정 위치',
+          value: locationLabel,
           valueClass: 'text-2xl font-semibold text-ink-strong',
           wrapperClass: '',
         },
@@ -72,7 +102,7 @@ const NationwideOverview: React.FC<NationwideOverviewProps> = ({ data, isLoading
       );
     }
 
-    return <p className="text-base text-ink-muted text-center">대기질 정보를 준비하고 있어요.</p>;
+    return <p className="text-base text-ink-muted text-center">{emptyMessage}</p>;
   };
 
   return (
@@ -84,15 +114,14 @@ const NationwideOverview: React.FC<NationwideOverviewProps> = ({ data, isLoading
             <LogoIcon className="relative z-10 h-10 w-10 text-white drop-shadow-[0_6px_10px_rgba(9,103,255,0.45)]" />
           </div>
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-ink-strong">대한민국 대기질 한눈에 보기</h2>
-            <p className="text-ink-muted text-base sm:text-lg">
-              전국 주요 지역의 대기질을 요약해 실내 생활 신호를 안내해드려요.
-            </p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-ink-strong">{title}</h2>
+            <p className="text-ink-muted text-base sm:text-lg">{description}</p>
           </div>
         </div>
         <div className="text-sm text-ink-muted sm:text-right">
-          <p>실시간 데이터를 기반으로 신호가 구성돼요.</p>
-          <p>변화가 느껴지면 새로고침해 최신 정보를 확인하세요.</p>
+          {helperMessages.map((message) => (
+            <p key={message}>{message}</p>
+          ))}
         </div>
       </div>
       {renderContent()}
