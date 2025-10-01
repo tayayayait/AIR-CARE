@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import MainScreen from './components/MainScreen';
-import { getAirQualityData } from './services/geminiService';
+import { getAirQualityData } from './services/airQualityService';
 import { getVillageForecast } from './services/kmaForecast';
 import { NOMINATIM_USER_AGENT } from './services/nominatim';
 import type { Coordinates, ForecastRow, RawAirData, SignalData } from './types';
@@ -66,8 +66,8 @@ const App: React.FC = () => {
         setActiveLocationQuery(query);
         setActiveLocationLabel(displayName ?? query);
       } catch (err) {
-        console.error(err);
-        setError('데이터를 불러올 수 없습니다. 연결 상태를 확인하고 다시 시도해주세요.');
+        console.error('Failed to fetch air quality data', err);
+        setError('대기질 정보를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
         setForecastRows([]);
       } finally {
         setIsLoading(false);
