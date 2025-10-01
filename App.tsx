@@ -6,7 +6,8 @@ import type { Coordinates, RawAirData, SignalData } from './types';
 const NATIONWIDE_QUERY = '대한민국';
 
 const App: React.FC = () => {
-  const [rawAirData, setRawAirData] = useState<RawAirData | null>(null);
+  const [nationwideData, setNationwideData] = useState<RawAirData | null>(null);
+  const [activeAirData, setActiveAirData] = useState<RawAirData | null>(null);
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +30,12 @@ const App: React.FC = () => {
     setError(null);
     try {
       const data = await getAirQualityData(query);
-      setRawAirData(data);
+      if (query === NATIONWIDE_QUERY) {
+        setNationwideData(data);
+        setActiveAirData(data);
+      } else {
+        setActiveAirData(data);
+      }
       setSignalData(processSignalLogic(data));
       setLastUpdated(new Date());
       setActiveLocationQuery(query);
@@ -148,7 +154,7 @@ const App: React.FC = () => {
   return (
     <MainScreen
       locationName={headerLocationName}
-      nationwideData={rawAirData}
+      nationwideData={nationwideData}
       coordinates={coordinates}
       signalData={signalData}
       isLoading={isLoading}
