@@ -11,6 +11,7 @@ import ForecastTable from './ForecastTable';
 interface MainScreenProps {
   locationName: string;
   coordinates: Coordinates | null;
+  activeAirData: RawAirData | null;
   nationwideData: RawAirData | null;
   forecastRows: ForecastRow[];
   signalData: SignalData | null;
@@ -20,11 +21,13 @@ interface MainScreenProps {
   onRefresh: () => void;
   onRequestLocation: () => void;
   isLocating: boolean;
+  isActiveNationwide: boolean;
 }
 
 const MainScreen: React.FC<MainScreenProps> = ({
   locationName,
   coordinates,
+  activeAirData,
   nationwideData,
   forecastRows,
   signalData,
@@ -34,6 +37,7 @@ const MainScreen: React.FC<MainScreenProps> = ({
   onRefresh,
   onRequestLocation,
   isLocating,
+  isActiveNationwide,
 }) => {
     
   const timeAgo = useMemo(() => {
@@ -120,6 +124,12 @@ const MainScreen: React.FC<MainScreenProps> = ({
   }, [signalData]);
 
   const effectiveMapExpanded = isDesktop || isMapExpanded;
+  const primaryData = isActiveNationwide ? nationwideData : activeAirData;
+  const primaryVariant = isActiveNationwide ? 'nationwide' : 'local';
+  const primaryFallbackLocation = isActiveNationwide ? '대한민국 주요 지역' : locationName;
+  const primaryLoading = isLoading && (isActiveNationwide || !primaryData);
+  const primaryError = !primaryData ? error : null;
+  const showNationwideComparison = !isActiveNationwide && Boolean(nationwideData);
 
   return (
     <div
@@ -127,12 +137,31 @@ const MainScreen: React.FC<MainScreenProps> = ({
     >
       <Header locationName={locationName} onRefresh={onRefresh} />
       <main className="relative z-10 flex-grow flex flex-col items-center w-full gap-6 px-4 sm:px-6 pt-6 pb-36 sm:pb-12">
-        <div className="w-full max-w-4xl">
+        <div className="w-full max-w-4xl flex flex-col gap-6">
           <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/30 bg-white/20 backdrop-blur-3xl shadow-[0_25px_70px_-30px_rgba(18,40,76,0.65)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_35px_90px_-30px_rgba(18,40,76,0.7)]">
             <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-white/30 via-white/10 to-white/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             <div className="pointer-events-none absolute inset-px rounded-[2.45rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]" />
-            <NationwideOverview data={nationwideData} isLoading={isLoading} error={error} />
+            <NationwideOverview
+              variant={primaryVariant}
+              data={primaryData}
+              isLoading={primaryLoading}
+              error={primaryError}
+              fallbackLocationName={primaryFallbackLocation}
+            />
           </div>
+          {showNationwideComparison && nationwideData && (
+            <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/30 bg-white/10 backdrop-blur-3xl shadow-[0_20px_60px_-30px_rgba(18,40,76,0.55)]">
+              <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-white/25 via-white/10 to-white/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-px rounded-[2.45rem] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" />
+              <NationwideOverview
+                variant="nationwide"
+                data={nationwideData}
+                isLoading={false}
+                error={null}
+                fallbackLocationName="대한민국 주요 지역"
+              />
+            </div>
+          )}
         </div>
         <div className="w-full max-w-2xl">
           <div
