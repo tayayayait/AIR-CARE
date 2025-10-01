@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import MainScreen from './components/MainScreen';
 import { getAirQualityData } from './services/geminiService';
+import { getVillageForecast } from './services/kmaForecast';
 import { NOMINATIM_USER_AGENT } from './services/nominatim';
-import type { Coordinates, RawAirData, SignalData } from './types';
+import type { Coordinates, ForecastRow, RawAirData, SignalData } from './types';
 
 const NATIONWIDE_QUERY = '대한민국';
+const SEOUL_CITY_HALL: Coordinates = { latitude: 37.5665, longitude: 126.978 };
 
 const App: React.FC = () => {
   const [nationwideData, setNationwideData] = useState<RawAirData | null>(null);
@@ -14,6 +16,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+  const [forecastRows, setForecastRows] = useState<ForecastRow[]>([]);
   const [activeLocationQuery, setActiveLocationQuery] = useState<string>(NATIONWIDE_QUERY);
   const [activeLocationLabel, setActiveLocationLabel] = useState<string>('대한민국 주요 지역');
   const [isLocating, setIsLocating] = useState<boolean>(false);
@@ -26,28 +29,52 @@ const App: React.FC = () => {
     return { isMaskOn, isVentilateOn, isHumidifyOn };
   }, []);
 
-  const fetchData = useCallback(async (query: string, displayName?: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await getAirQualityData(query);
-      if (query === NATIONWIDE_QUERY) {
-        setNationwideData(data);
-        setActiveAirData(data);
-      } else {
-        setActiveAirData(data);
+  const fetchData = useCallback(
+    async (query: string, displayName?: string, overrideCoordinates?: Coordinates | null) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await getAirQualityData(query);
+        if (query === NATIONWIDE_QUERY) {
+          setNationwideData(data);
+          setActiveAirData(data);
+        } else {
+          setActiveAirData(data);
+        }
+        setSignalData(processSignalLogic(data));
+
+        const resolvedCoordinates =
+          overrideCoordinates ??
+          (query === NATIONWIDE_QUERY ? SEOUL_CITY_HALL : null);
+
+        if (resolvedCoordinates) {
+          try {
+            const forecast = await getVillageForecast(
+              resolvedCoordinates.latitude,
+              resolvedCoordinates.longitude,
+            );
+            setForecastRows(forecast);
+          } catch (forecastError) {
+            console.error('Failed to fetch KMA forecast', forecastError);
+            setForecastRows([]);
+          }
+        } else {
+          setForecastRows([]);
+        }
+
+        setLastUpdated(new Date());
+        setActiveLocationQuery(query);
+        setActiveLocationLabel(displayName ?? query);
+      } catch (err) {
+        console.error(err);
+        setError('데이터를 불러올 수 없습니다. 연결 상태를 확인하고 다시 시도해주세요.');
+        setForecastRows([]);
+      } finally {
+        setIsLoading(false);
       }
-      setSignalData(processSignalLogic(data));
-      setLastUpdated(new Date());
-      setActiveLocationQuery(query);
-      setActiveLocationLabel(displayName ?? query);
-    } catch (err) {
-      console.error(err);
-      setError('데이터를 불러올 수 없습니다. 연결 상태를 확인하고 다시 시도해주세요.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [processSignalLogic]);
+    },
+    [processSignalLogic],
+  );
 
   const resolveLocationQuery = useCallback(async ({ latitude, longitude }: Coordinates) => {
     try {
@@ -97,12 +124,12 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void fetchData(NATIONWIDE_QUERY, '대한민국 주요 지역');
+    void fetchData(NATIONWIDE_QUERY, '대한민국 주요 지역', SEOUL_CITY_HALL);
   }, [fetchData]);
 
   const handleRefresh = useCallback(() => {
-    void fetchData(activeLocationQuery, activeLocationLabel);
-  }, [activeLocationLabel, activeLocationQuery, fetchData]);
+    void fetchData(activeLocationQuery, activeLocationLabel, coordinates);
+  }, [activeLocationLabel, activeLocationQuery, coordinates, fetchData]);
 
   const handleRequestLocation = useCallback(() => {
     if (!('geolocation' in navigator)) {
@@ -125,7 +152,7 @@ const App: React.FC = () => {
           const { query, displayName } = await resolveLocationQuery(nextCoordinates);
           setCoordinates(nextCoordinates);
           setActiveLocationLabel(displayName);
-          await fetchData(query, displayName);
+          await fetchData(query, displayName, nextCoordinates);
         } catch (geoError) {
           console.error(geoError);
           setError('현재 위치의 대기질 정보를 불러오지 못했습니다.');
@@ -158,6 +185,7 @@ const App: React.FC = () => {
       locationName={headerLocationName}
       nationwideData={nationwideData}
       coordinates={coordinates}
+      forecastRows={forecastRows}
       signalData={signalData}
       isLoading={isLoading}
       error={error}

@@ -1,16 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { SignalData, Coordinates, RawAirData } from '../types';
+import type { SignalData, Coordinates, RawAirData, ForecastRow } from '../types';
 import ErrorDisplay from './ErrorDisplay';
 import Header from './Header';
 import { MaskIcon, VentilateIcon, HumidifyIcon } from './Icons';
 import MapView from './MapView';
 import NationwideOverview from './Onboarding';
 import SignalSheet, { SignalSheetItem } from './SignalSheet';
+import ForecastTable from './ForecastTable';
 
 interface MainScreenProps {
   locationName: string;
   coordinates: Coordinates | null;
   nationwideData: RawAirData | null;
+  forecastRows: ForecastRow[];
   signalData: SignalData | null;
   isLoading: boolean;
   error: string | null;
@@ -24,6 +26,7 @@ const MainScreen: React.FC<MainScreenProps> = ({
   locationName,
   coordinates,
   nationwideData,
+  forecastRows,
   signalData,
   isLoading,
   error,
@@ -173,6 +176,9 @@ const MainScreen: React.FC<MainScreenProps> = ({
               </div>
             </div>
           </div>
+        </div>
+        <div className="w-full max-w-3xl">
+          <ForecastTable rows={forecastRows} isLoading={isLoading} />
         </div>
         {error && (
           <ErrorDisplay
