@@ -110,14 +110,21 @@ const selectBestItem = (items: AirQualityItem[], location: string): AirQualityIt
 };
 
 export const getAirQualityData = async (location: string): Promise<RawAirData> => {
-  const serviceKey =
+  const rawServiceKey =
     process.env.AIRKOREA_SERVICE_KEY ??
     process.env.KMA_SERVICE_KEY ??
     import.meta.env.VITE_AIRKOREA_SERVICE_KEY ??
     import.meta.env.VITE_KMA_SERVICE_KEY;
 
-  if (!serviceKey) {
+  if (!rawServiceKey) {
     throw new Error('대기질 API 서비스 키가 설정되지 않았습니다.');
+  }
+
+  let serviceKey = rawServiceKey;
+  try {
+    serviceKey = decodeURIComponent(rawServiceKey);
+  } catch {
+    serviceKey = rawServiceKey;
   }
 
   const sidoName = resolveSidoName(location);

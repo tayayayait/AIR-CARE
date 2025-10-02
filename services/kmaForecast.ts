@@ -50,7 +50,7 @@ export const latestBaseDateTime = (now: Date = new Date()) => {
   const current = kst.getHours() * 100 + kst.getMinutes();
 
   let baseDate = `${year}${month}${day}`;
-  let baseTime = BASE_TIMES[0];
+  let baseTime: (typeof BASE_TIMES)[number] = BASE_TIMES[0];
 
   for (const time of BASE_TIMES) {
     const baseValue = Number(time);
