@@ -99,10 +99,20 @@ interface KMAApiResponse {
 const SERVICE_ENDPOINT = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst';
 
 export const getVillageForecast = async (latitude: number, longitude: number): Promise<ForecastRow[]> => {
-  const serviceKey = process.env.KMA_SERVICE_KEY ?? import.meta.env.VITE_KMA_SERVICE_KEY;
-  if (!serviceKey) {
+  const rawServiceKey = process.env.KMA_SERVICE_KEY ?? import.meta.env.VITE_KMA_SERVICE_KEY;
+  if (!rawServiceKey) {
     console.warn('KMA_SERVICE_KEY is not defined. Skipping forecast fetch.');
     return [];
+  }
+
+  let serviceKey = rawServiceKey;
+
+  if (rawServiceKey.includes('%')) {
+    try {
+      serviceKey = decodeURIComponent(rawServiceKey);
+    } catch (error) {
+      serviceKey = rawServiceKey;
+    }
   }
 
   const { nx, ny } = latLonToGrid(latitude, longitude);
